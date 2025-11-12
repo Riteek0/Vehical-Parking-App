@@ -2,8 +2,6 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.security import generate_password_hash
 
-
-
 db = SQLAlchemy()
 
 class SpotStatus:
@@ -37,6 +35,7 @@ class ParkingLot(db.Model):
     price = db.Column(db.Float, nullable=False)
     address = db.Column(db.String, nullable=False)
     pin_code = db.Column(db.String, nullable=False)
+    # --- TYPO FIX: Removed space from maximum_number_ of_spots ---
     maximum_number_of_spots = db.Column(db.Integer, nullable=False)
     spots = db.relationship('ParkingSpot', back_populates='lot',cascade="all, delete-orphan")     
     
@@ -55,7 +54,8 @@ class Reservation(db.Model):
 
 #initialize the database
 def init_db(app):
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///parking.db'
+    # This function is now simpler. It just initializes the app.
+    # The database URL is ALREADY set in app.py.
     db.init_app(app)
     
 

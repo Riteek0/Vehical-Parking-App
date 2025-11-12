@@ -1,0 +1,36 @@
+{% extends 'layout.html' %}
+{% block content %}
+<a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+<h2 class="mb-4">Details for: {{ lot.prime_location_name }}</h2>
+<div class="card">
+    <div class="card-header">Spot Status Overview</div>
+    <div class="card-body">
+        <div class="row">
+            {% for spot in lot.spots|sort(attribute='id') %}
+            <div class="col-md-3 mb-3">
+                {% set reservation = reservation_map.get(spot.id) %}
+                <div class="card h-100 {% if spot.status == 'O' %}border-danger{% else %}border-success{% endif %}">
+                    <div class="card-header fw-bold {% if spot.status == 'O' %}bg-danger text-white{% else %}bg-success text-white{% endif %}">
+                        Spot #{{ spot.id }}
+                    </div>
+                    <div class="card-body">
+                        {% if spot.status == 'O' %}
+                            <p><strong>Status:</strong> Occupied</p>
+                            {% if reservation %}
+                            <p><strong>User:</strong> {{ reservation.user.full_name }}</p>
+                            <p><strong>Vehicle:</strong> {{ reservation.vehicle_number }}</p>
+                            <p><strong>Parked:</strong> {{ reservation.parking_timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                            {% else %}
+                            <p class="text-muted">Reservation details missing.</p>
+                            {% endif %}
+                        {% else %}
+                            <p><strong>Status:</strong> Available</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

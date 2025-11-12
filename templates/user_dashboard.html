@@ -1,0 +1,85 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2 class="mb-4">Welcome, {{ user.full_name }}!</h2>
+<div class="card">
+    <div class="card-header"><h4>My Active Reservations</h4></div>
+    <div class="card-body">
+        {% set active_reservations = reservations|selectattr('leaving_timestamp', 'none')|list %}
+        {% if active_reservations %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Lot Name</th>
+                        <th>Spot ID</th>
+                        <th>Vehicle No.</th>
+                        <th>Parked At (UTC)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in active_reservations %}
+                    <tr>
+                        <td>{{ res.spot.lot.prime_location_name }}</td>
+                        <td>{{ res.spot.id }}</td>
+                        <td>{{ res.vehicle_number }}</td>
+                        <td>{{ res.parking_timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <form action="{{ url_for('release_spot', reservation_id=res.id) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                <button type="submit" class="btn btn-warning btn-sm">Release Spot</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>You have no active reservations. Choose a lot below to park your vehicle.</p>
+        {% endif %}
+    </div>
+</div>
+<div class="card mt-4">
+    <div class="card-header"><h4>Available Parking Lots</h4></div>
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Lot Name</th>
+                    <th>Address</th>
+                    <th>Price/hr</th>
+                    <th>Available Spots</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lot in lots %}
+                <tr>
+                    <td>{{ lot.prime_location_name }}</td>
+                    <td>{{ lot.address }}</td>
+                    <td>${{ "%.2f"|format(lot.price) }}</td>
+                    <td>
+                        {% set available_spots = lot.spots|selectattr('status', 'equalto', 'A')|list|length %}
+                        <span class="badge {% if available_spots > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ available_spots }} / {{ lot.maximum_number_of_spots }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if available_spots > 0 %}
+                            <form action="{{ url_for('reserve_spot', lot_id=lot.id) }}" method="POST">
+                                <div class="input-group">
+                                    <input type="text" name="vehicle_number" class="form-control form-control-sm" placeholder="Vehicle No." required>
+                                    <button type="submit" class="btn btn-primary btn-sm">Book Now</button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled>Full</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center">No parking lots available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

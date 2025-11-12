@@ -1,0 +1,100 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Admin Dashboard</h2>
+    <a href="{{ url_for('create_lot') }}" class="btn btn-success">Create New Lot</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary"><i class="fas fa-warehouse me-2"></i>Total Lots</h5>
+                <p class="card-text fs-1 fw-bold">{{ total_lots }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-users me-2"></i>Total Users</h5>
+                <p class="card-text fs-1 fw-bold">{{ total_users }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h5 class="card-title text-danger"><i class="fas fa-car me-2"></i>Occupied Spots</h5>
+                <p class="card-text fs-1 fw-bold">{{ occupied_spots }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info"><i class="fas fa-check-circle me-2"></i>Available Spots</h5>
+                <p class="card-text fs-1 fw-bold">{{ available_spots }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card shadow-sm"> <div class="card-header"><h4>Manage Parking Lots</h4></div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Lot Name</th>
+                    <th>Address</th>
+                    <th>Price/hr</th>
+                    <th>Spots (Occupied/Total)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lot in lots %}
+                <tr>
+                    <td>{{ lot.prime_location_name }}</td>
+                    <td>{{ lot.address }}, {{ lot.pin_code }}</td>
+                    <td>${{ "%.2f"|format(lot.price) }}</td>
+                    <td>
+                        {% set occupied = lot.spots|selectattr('status', 'equalto', 'O')|list|length %}
+                        {{ occupied }} / {{ lot.maximum_number_of_spots }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin_lot_details', lot_id=lot.id) }}" class="btn btn-primary btn-sm">View Details</a>
+                        <a href="{{ url_for('edit_lot', lot_id=lot.id) }}" class="btn btn-info btn-sm">Edit</a>
+                        <form action="{{ url_for('delete_lot', lot_id=lot.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center">No parking lots found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="card mt-4 shadow-sm"> <div class="card-header"><h4>Registered Users</h4></div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr><th>ID</th><th>Username</th><th>Full Name</th><th>Email</th></tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.full_name }}</td>
+                    <td>{{ user.email }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center">No registered users found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

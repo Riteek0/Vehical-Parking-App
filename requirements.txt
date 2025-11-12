@@ -2,3 +2,5 @@ Flask
 Flask-SQLAlchemy
 Werkzeug
 Jinja2==3.1.6
+gunicorn
+psycopg2-binary

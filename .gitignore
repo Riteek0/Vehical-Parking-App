@@ -1,0 +1,22 @@
+
+
+# VS Code
+.vscode/
+**/.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# Environments
+venv/
+ENV/
+
+# Flask DB
+*.sqlite3
+instance/
+
+
+# Logs
+logs/
+*.log

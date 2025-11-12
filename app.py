@@ -3,20 +3,40 @@ from model import db, init_db,User, ParkingLot, ParkingSpot, Reservation, SpotSt
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from model import create_admin_if_not_exists 
+import os # <-- Import the OS library
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///parking.db' 
-app.config['SECRET_KEY'] = 'secret123'
+
+# --- DATABASE AND SECRET KEY CONFIG ---
+# This is the new, important part.
+# It checks if we are on a live server (Render) or your local computer.
+
+# Get the cloud database URL from the "environment variables" (which Render will provide)
+db_url = os.environ.get('DATABASE_URL')
+
+if db_url:
+    # We are on the live server (Render)
+    # The 'postgres' protocol needs to be changed to 'postgresql' for SQLAlchemy
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url.replace("postgres://", "postgresql://", 1)
+else:
+    # We are on your local computer
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///parking.db'
+
+# Get the SECRET_KEY from environment variables.
+# We will set this on Render.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a_default_local_secret_key')
+# --- END OF NEW CONFIG ---
 
 
+# Initialize the database with our app
 init_db(app)
 
+# Create database tables (and the admin user) if they don't exist
+# This will run both locally and on the live server
 with app.app_context():
     db.create_all()
+    create_admin_if_not_exists()
 
-with app.app_context():
-    db.create_all()
-    create_admin_if_not_exists()  #   admin is  present
 
 @app.route('/')
 def home():
@@ -154,6 +174,7 @@ def delete_lot(lot_id):
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
     lot = ParkingLot.query.get_or_404(lot_id)
+    # --- TYPO FIX: Changed spot..status to spot.status ---
     if all(spot.status == SpotStatus.AVAILABLE for spot in lot.spots):
         db.session.delete(lot)
         db.session.commit()
@@ -183,13 +204,13 @@ def reserve_spot(lot_id):
         flash('No available spots in this lot.')
         return redirect(url_for('user_dashboard'))
     spot.status = SpotStatus.OCCUPIED
-    vehicle_number = request.form.get('vehicle_number', 'N/A')  # <-- Add this line
+    vehicle_number = request.form.get('vehicle_number', 'N/A')
     reservation = Reservation(
         spot_id=spot.id,
         user_id=session['user_id'],
         parking_timestamp=datetime.utcnow(),
         parking_cost=lot.price,
-        vehicle_number=vehicle_number  # <-- Add this line
+        vehicle_number=vehicle_number
     )
     db.session.add(reservation)
     db.session.commit()
